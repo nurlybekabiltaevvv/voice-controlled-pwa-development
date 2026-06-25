@@ -14,7 +14,7 @@ Built as a portfolio project to demonstrate skills in **PWA development**, **Web
 
 ## 🌟 Live Demo
 
-- **Customer Version**: [Demo Link](https://nurlybekabiltaevvv.github.io/voice-controlled-pwa-development/customer/)
+- **Customer Version**: https://nurlybekabiltaevvv.github.io/voice-controlled-pwa-development/
 - **Waiter Version**: [Demo Link](https://nurlybekabiltaevvv.github.io/voice-controlled-pwa-development/waiter/)
 
 *(Update links after deployment)*

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="description" content="VoiceFlow — Голосовой планировщик. Управляйте задачами с помощью голоса.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="VoiceFlow">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <title>VoiceFlow — Голосовой планировщик</title>
+  
+  <!-- Tailwind CSS CDN (utility classes, supplementary to custom CSS) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  
+  <!-- Custom CSS (primary styling with CSS variables for theming) -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Предотвращение мерцания темы (FOUC) — применяем тему до рендера DOM -->
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('voiceflow-state');
+        if (saved) {
+          var theme = JSON.parse(saved).theme;
+          if (theme) document.documentElement.setAttribute('data-theme', theme);
+        } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      } catch(e) {}
+    })();
+  </script>
+</head>
+<body>
+
+  <!-- ==================== Install Banner ==================== -->
+  <div id="install-banner" class="install-banner hidden" role="alert" aria-label="Установить приложение">
+    <div class="install-banner-text">
+      <div class="install-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2L8 6h3v6h2V6h3l-4-4zm-7 10v8a2 2 0 002 2h10a2 2 0 002-2v-8h-2v8H7v-8H5z"/></svg>
+      </div>
+      <div>
+        <strong>Установить VoiceFlow</strong>
+        <br>
+        <small style="color: var(--color-text-muted)">Работает офлайн, быстрый доступ</small>
+      </div>
+    </div>
+    <div class="install-banner-actions">
+      <button id="install-btn" class="install-btn" type="button">Установить</button>
+      <button id="install-dismiss" class="install-dismiss" type="button">Позже</button>
+    </div>
+  </div>
+
+  <!-- ==================== App Layout ==================== -->
+  <div id="app" class="app-layout">
+
+    <!-- ==================== Desktop Sidebar ==================== -->
+    <aside id="sidebar" class="sidebar" role="navigation" aria-label="Основная навигация">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3zM5 10a1 1 0 0 0-1 1 8 8 0 0 0 7 7.93V21h-2a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-2.07A8 8 0 0 0 20 11a1 1 0 1 0-2 0 6 6 0 0 1-12 0 1 1 0 0 0-1-1z"/></svg>
+        </div>
+        <span class="sidebar-brand">VoiceFlow</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-nav="home" type="button" aria-label="Главная">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>Главная</span>
+        </button>
+        <button class="nav-item" data-nav="tasks" type="button" aria-label="Задачи">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <span>Задачи</span>
+        </button>
+        <button class="nav-item" data-nav="settings" type="button" aria-label="Настройки">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Настройки</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <span class="voice-dot"></span>
+        <span>Голос: доступен</span>
+      </div>
+    </aside>
+
+    <!-- ==================== Main Content ==================== -->
+    <main id="main-content" class="main-content">
+
+      <!-- ==================== HOME PAGE ==================== -->
+      <section data-page="home" class="page active" role="region" aria-label="Главная страница">
+        <header class="page-header">
+          <h1>Главная</h1>
+          <div class="header-actions">
+            <button id="header-theme-toggle" class="btn-icon" type="button" aria-label="Переключить тему" style="width:36px;height:36px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;transition:all var(--transition-fast);color:var(--color-text-secondary);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <div class="page-body">
+          <!-- Greeting -->
+          <div class="greeting-card">
+            <h2 class="greeting-text" id="greeting-text">Добрый день! 👋</h2>
+            <p class="greeting-sub" id="greeting-sub">Сегодня отличный день для продуктивности</p>
+          </div>
+
+          <!-- Stats -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon total">📋</div>
+              <div class="stat-value" id="stat-total">0</div>
+              <div class="stat-label">Всего</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon active">⏳</div>
+              <div class="stat-value" id="stat-active">0</div>
+              <div class="stat-label">Активных</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon completed">✅</div>
+              <div class="stat-value" id="stat-completed">0</div>
+              <div class="stat-label">Выполнено</div>
+            </div>
+          </div>
+
+          <!-- Voice Commands -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">🎤 Голосовые команды</h3>
+            </div>
+            <div class="voice-commands-grid">
+              <div class="voice-command-item">
+                <div>
+                  <div class="voice-command-phrase">"Открыть главную"</div>
+                  <div class="voice-command-action">Перейти на главную</div>
+                </div>
+              </div>
+              <div class="voice-command-item">
+                <div>
+                  <div class="voice-command-phrase">"Открыть задачи"</div>
+                  <div class="voice-command-action">Перейти к задачам</div>
+                </div>
+              </div>
+              <div class="voice-command-item">
+                <div>
+                  <div class="voice-command-phrase">"Добавь задачу [текст]"</div>
+                  <div class="voice-command-action">Создать новую задачу</div>
+                </div>
+              </div>
+              <div class="voice-command-item">
+                <div>
+                  <div class="voice-command-phrase">"Поменяй тему"</div>
+                  <div class="voice-command-action">Переключить тему</div>
+                </div>
+              </div>
+              <div class="voice-command-item">
+                <div>
+                  <div class="voice-command-phrase">"Удали все задачи"</div>
+                  <div class="voice-command-action">Очистить список</div>
+                </div>
+              </div>
+              <div class="voice-command-item">
+                <div>
+                  <div class="voice-command-phrase">"Открыть настройки"</div>
+                  <div class="voice-command-action">Перейти к настройкам</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Tasks -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">📌 Последние задачи</h3>
+            </div>
+            <div id="recent-tasks" class="task-list">
+              <div class="empty-state">
+                <div class="empty-state-icon">📝</div>
+                <p class="empty-state-text">Задач пока нет. Добавьте первую задачу или скажите голосом!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TASKS PAGE ==================== -->
+      <section data-page="tasks" class="page" role="region" aria-label="Задачи">
+        <header class="page-header">
+          <h1>Задачи <span id="tasks-count" style="font-weight:400;font-size:var(--text-sm);color:var(--color-text-muted)"></span></h1>
+          <div class="header-actions">
+            <button id="header-theme-toggle-tasks" class="btn-icon" type="button" aria-label="Переключить тему" style="width:36px;height:36px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;transition:all var(--transition-fast);color:var(--color-text-secondary);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <div class="page-body">
+          <!-- Add Task Form -->
+          <form id="add-task-form" class="add-task-form" autocomplete="off">
+            <div class="add-task-input-wrapper">
+              <input 
+                id="add-task-input" 
+                class="add-task-input" 
+                type="text" 
+                placeholder="Новая задача..." 
+                aria-label="Текст задачи"
+                maxlength="200"
+              >
+              <button id="voice-add-task" class="add-task-voice-btn" type="button" aria-label="Добавить задачу голосом">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><line x1="19" y1="10" x2="19" y2="12a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              </button>
+            </div>
+            <select id="add-task-category" class="add-task-category" aria-label="Категория задачи">
+              <option value="general">📋 Общее</option>
+              <option value="work">💼 Работа</option>
+              <option value="personal">👤 Личное</option>
+              <option value="urgent">⚡ Срочное</option>
+            </select>
+            <button type="submit" class="add-task-btn" aria-label="Добавить задачу">Добавить</button>
+          </form>
+
+          <!-- Filter Tabs -->
+          <div class="filter-tabs" role="tablist" aria-label="Фильтр задач">
+            <button class="filter-tab active" data-filter="all" role="tab" aria-selected="true" type="button">Все</button>
+            <button class="filter-tab" data-filter="active" role="tab" aria-selected="false" type="button">Активные</button>
+            <button class="filter-tab" data-filter="completed" role="tab" aria-selected="false" type="button">Выполненные</button>
+          </div>
+
+          <!-- Task List -->
+          <div id="task-list" class="task-list" role="list" aria-label="Список задач">
+            <div class="empty-state">
+              <div class="empty-state-icon">📝</div>
+              <p class="empty-state-text">Задач пока нет. Добавьте первую!</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== SETTINGS PAGE ==================== -->
+      <section data-page="settings" class="page" role="region" aria-label="Настройки">
+        <header class="page-header">
+          <h1>Настройки</h1>
+          <div class="header-actions">
+            <button id="header-theme-toggle-settings" class="btn-icon" type="button" aria-label="Переключить тему" style="width:36px;height:36px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;transition:all var(--transition-fast);color:var(--color-text-secondary);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <div class="page-body">
+          <!-- Appearance -->
+          <div class="settings-group">
+            <div class="settings-group-title">Оформление</div>
+            <div class="settings-item">
+              <div class="settings-item-info">
+                <span class="settings-item-label">Тёмная тема</span>
+                <span class="settings-item-desc">Переключить между тёмной и светлой темой</span>
+              </div>
+              <div class="settings-item-action">
+                <button id="theme-toggle" class="toggle active" type="button" role="switch" aria-checked="true" aria-label="Тёмная тема"></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Voice -->
+          <div class="settings-group">
+            <div class="settings-group-title">Голос</div>
+            <div class="settings-item">
+              <div class="settings-item-info">
+                <span class="settings-item-label">Голосовые подсказки</span>
+                <span class="settings-item-desc" id="voice-status">Доступно ✓</span>
+              </div>
+              <div class="settings-item-action">
+                <button id="voice-toggle" class="toggle active" type="button" role="switch" aria-checked="true" aria-label="Голосовые подсказки"></button>
+              </div>
+            </div>
+            <div class="settings-item">
+              <div class="settings-item-info">
+                <span class="settings-item-label">Скорость озвучки</span>
+                <span class="settings-item-desc" id="voice-rate-value">1.0x</span>
+              </div>
+              <div class="settings-item-action">
+                <input id="voice-rate" class="range-slider" type="range" min="0.5" max="2" step="0.1" value="1.0" aria-label="Скорость озвучки">
+              </div>
+            </div>
+          </div>
+
+          <!-- Data -->
+          <div class="settings-group">
+            <div class="settings-group-title">Данные</div>
+            <div class="settings-item">
+              <div class="settings-item-info">
+                <span class="settings-item-label">Задач сохранено</span>
+                <span class="settings-item-desc">Хранятся в localStorage</span>
+              </div>
+              <div class="settings-item-action">
+                <span id="settings-task-count" style="font-weight:600;color:var(--color-text);font-size:var(--text-lg);">0</span>
+              </div>
+            </div>
+            <div class="settings-item">
+              <div class="settings-item-info">
+                <span class="settings-item-label">Экспорт данных</span>
+                <span class="settings-item-desc">Скачать резервную копию в JSON</span>
+              </div>
+              <div class="settings-item-action">
+                <button id="export-data" class="add-task-btn" type="button" style="padding:6px 16px;font-size:var(--text-xs);">Экспорт</button>
+              </div>
+            </div>
+            <div class="settings-item">
+              <div class="settings-item-info">
+                <span class="settings-item-label">Удалить все задачи</span>
+                <span class="settings-item-desc">Это действие нельзя отменить</span>
+              </div>
+              <div class="settings-item-action">
+                <button id="clear-all-tasks" class="btn-danger" type="button">Очистить</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Install -->
+          <div class="settings-group">
+            <div class="settings-group-title">Приложение</div>
+            <div class="settings-item">
+              <div class="settings-item-info">
+                <span class="settings-item-label">Установить приложение</span>
+                <span class="settings-item-desc">Работает офлайн, быстрый доступ</span>
+              </div>
+              <div class="settings-item-action">
+                <button id="install-settings-btn" class="add-task-btn" type="button" style="padding:6px 16px;font-size:var(--text-xs);">Установить</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- About -->
+          <div class="card about-card">
+            <div class="about-logo">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3zM5 10a1 1 0 0 0-1 1 8 8 0 0 0 7 7.93V21h-2a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-2.07A8 8 0 0 0 20 11a1 1 0 1 0-2 0 6 6 0 0 1-12 0 1 1 0 0 0-1-1z"/></svg>
+            </div>
+            <div class="about-name">VoiceFlow</div>
+            <div class="about-version">v1.0.0</div>
+            <div class="about-desc">Голосовой планировщик с распознаванием речи и офлайн-поддержкой. Создавайте задачи, управляйте приложением голосом — быстро и удобно.</div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ==================== Mobile Bottom Navigation ==================== -->
+    <nav id="bottom-nav" class="bottom-nav" role="navigation" aria-label="Нижняя навигация">
+      <button class="bottom-nav-item active" data-nav="home" type="button" aria-label="Главная">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Главная</span>
+      </button>
+      <button class="bottom-nav-item" data-nav="tasks" type="button" aria-label="Задачи">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <span>Задачи</span>
+      </button>
+      <button class="bottom-nav-item" data-nav="settings" type="button" aria-label="Настройки">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Настройки</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ==================== Voice FAB ==================== -->
+  <button id="voice-fab" class="voice-fab" type="button" aria-label="Голосовое управление" title="Нажмите для голосовой команды">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><line x1="19" y1="10" x2="19" y2="12a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+  </button>
+
+  <!-- ==================== Voice Overlay ==================== -->
+  <div id="voice-overlay" class="voice-overlay" role="dialog" aria-label="Голосовой ввод" aria-live="polite">
+    <div class="voice-overlay-header">
+      <div class="voice-overlay-dot"></div>
+      <span class="voice-overlay-label">Слушаю...</span>
+    </div>
+    <div id="voice-transcript" class="voice-overlay-transcript">Слушаю...</div>
+    <div class="voice-overlay-hint">Скажите команду, например: "Добавь задачу купить молоко"</div>
+  </div>
+
+  <!-- ==================== Toast Container ==================== -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- ==================== Scripts ==================== -->
+  <!-- VoiceManager загружается первым, так как app.js зависит от него -->
+  <script src="voice.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>

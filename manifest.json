@@ -1,0 +1,21 @@
+{
+  "name": "VoiceFlow — Голосовой планировщик",
+  "short_name": "VoiceFlow",
+  "description": "Продуктивный планировщик с голосовым управлением. Управляйте задачами с помощью голоса.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#6366f1",
+  "lang": "ru",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

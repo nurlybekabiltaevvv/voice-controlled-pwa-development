@@ -15,10 +15,7 @@ Built as a portfolio project to demonstrate skills in **PWA development**, **Web
 ## 🌟 Live Demo
 
 - **Customer Version**: https://nurlybekabiltaevvv.github.io/voice-controlled-pwa-development/
-- **Waiter Version**: [Demo Link](https://nurlybekabiltaevvv.github.io/voice-controlled-pwa-development/waiter/)
-
-*(Update links after deployment)*
-
+- **Waiter Version**: https://nurlybekabiltaevvv.github.io/voice-controlled-pwa-development/waiter/
 
 
 ## ✨ Key Features
@@ -137,7 +134,9 @@ This project is open-sourced under the **MIT License**.
 
 **Nurlybek Abiltaev**
 
-- GitHub: [@nurlybekabiltaevvv](https://github.com/nurlybekabiltaevvv)
+- GitHub: @nurlybekabiltaevvv
+- https://github.com/nurlybekabiltaevvv
+- gmail: nurlbekabiltaevvv@gmail.com
 
 
 **⭐ Feel free to star this repository if you found it useful!**
